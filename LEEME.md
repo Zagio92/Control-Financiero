@@ -1,8 +1,8 @@
-# Mi Control Financiero: subir a GitHub Pages
+# FinanzApp: subir a GitHub Pages
 
 Contenido de esta carpeta (sube TODO, manteniendo la carpeta `icons`):
 
-- `index.html`: la app completa
+- `index.html`: la app completa (incluye el logo)
 - `manifest.webmanifest`: datos para instalarla como app
 - `sw.js`: permite usarla sin conexión
 - `icons/`: iconos de la app
