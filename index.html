@@ -272,11 +272,15 @@ function seed(d){
     cob:[{id:uid(),n:'Responsabilidad civil obligatoria',d:'Hasta el límite legal'},{id:uid(),n:'Daños propios (todo riesgo)',d:'Franquicia de 300 €'},{id:uid(),n:'Asistencia en viaje',d:'Desde el km 0, 24 h'},{id:uid(),n:'Lunas',d:'Sin franquicia'},{id:uid(),n:'Robo e incendio',d:'Valor venal'},{id:uid(),n:'Vehículo de sustitución',d:'Hasta 7 días'}]},
    {id:uid(),nombre:'Seguro de hogar',tipo:'Hogar',compania:'Aseguradora Ejemplo',poliza:'HO-987654',prima:210,pago:'Anual',renovacion:addM(k0,5)+'-01',telefono:'',obs:'',
     cob:[{id:uid(),n:'Continente',d:'120.000 €'},{id:uid(),n:'Contenido',d:'25.000 €'},{id:uid(),n:'Daños por agua',d:'Incluye localización de la fuga'},{id:uid(),n:'Responsabilidad civil familiar',d:'300.000 €'}]}];
+  d.seguros.push({id:uid(),clase:'sus',nombre:'Netflix',tipo:'Vídeo',plan:'Estándar',precio:13.99,pago:'Mensual',renovacion:k0+'-15',cuenta:'Tarjeta',obs:'',cob:[{id:uid(),n:'Pantallas a la vez',d:'2'},{id:uid(),n:'Calidad',d:'Full HD'}]},
+    {id:uid(),clase:'sus',nombre:'Xbox Game Pass',tipo:'Videojuegos',plan:'Ultimate',precio:8.99,pago:'Mensual',renovacion:k0+'-03',cuenta:'Tarjeta',obs:'',cob:[{id:uid(),n:'Catálogo de juegos',d:'PC y consola'},{id:uid(),n:'Juego en la nube',d:''}]},
+    {id:uid(),clase:'sus',nombre:'Spotify',tipo:'Música',plan:'Individual',precio:10.99,pago:'Mensual',renovacion:k0+'-22',cuenta:'Tarjeta',obs:'',cob:[]});
   d.metas=[{id:'m1',n:'Fondo de emergencia',meta:6000,act:1850,fecha:''},{id:'m2',n:'Vivienda / entrada',meta:30000,act:4200,fecha:''},{id:'m3',n:'Coche y mantenimiento',meta:1500,act:600,fecha:''},{id:'m4',n:'Viajes personales',meta:2000,act:450,fecha:''}];
 }
 
 /* ===== Iconos ===== */
 var IC={
+ sus:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/>',
  seguros:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
  inicio:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  movs:'<path d="M4 7h13m0 0-3-3m3 3-3 3M20 17H7m0 0 3-3m-3 3 3 3"/>',
@@ -334,7 +338,7 @@ function ic(n,s){s=s||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 
 
 /* ===== Vistas ===== */
 var TABS=[['inicio','Inicio'],['movs','Movimientos'],['calc','Calculadora'],['ana','Análisis'],['mas','Más']];
-var TITLES={inicio:'Mi control financiero',movs:'Movimientos',pres:'Presupuesto',ana:'Análisis',mas:'Más',fijos:'Gastos fijos',ahorro:'Ahorro y objetivos',viajes:'Viajes de trabajo',viaje:'Viaje',calc:'Calculadora 50/30/20',deudas:'Deudas pendientes',seguros:'Seguros',seguro:'Seguro',conf:'Configuración',guia:'Guía de uso'};
+var TITLES={inicio:'Mi control financiero',movs:'Movimientos',pres:'Presupuesto',ana:'Análisis',mas:'Más',fijos:'Gastos fijos',ahorro:'Ahorro y objetivos',viajes:'Viajes de trabajo',viaje:'Viaje',calc:'Calculadora 50/30/20',deudas:'Deudas pendientes',seguros:'Seguros y suscripciones',seguro:'Seguro',conf:'Configuración',guia:'Guía de uso'};
 function kpi(cls,l,v,neg){return '<div class="kpi '+cls+'"><h3>'+l+'</h3><div class="v'+(neg&&v<0?' neg':'')+'">'+eur(v)+'</div></div>'}
 
 function sub2(a,b){return '<div class="kv" style="font-size:13px"><span style="color:var(--muted);min-width:0">'+a+'</span><b style="font-weight:600">'+b+'</b></div>'}
@@ -363,7 +367,7 @@ function detallesInicio(t){
   return f1+f2+f3}
 // Aviso de la próxima renovación de seguro (o de una fecha ya pasada sin actualizar)
 function avisoSeguro(){
-  var ls=(S.seguros||[]).filter(function(sg){return diasHasta(sg.renovacion)!==null}).sort(function(a,b){return a.renovacion<b.renovacion?-1:1});
+  var ls=(S.seguros||[]).filter(function(sg){return !esSus(sg)&&diasHasta(sg.renovacion)!==null}).sort(function(a,b){return a.renovacion<b.renovacion?-1:1});
   if(!ls.length)return '';
   var pas=ls.filter(function(sg){return diasHasta(sg.renovacion)<0}),fut=ls.filter(function(sg){return diasHasta(sg.renovacion)>=0});
   var sg,cls,tit,txt;
@@ -460,7 +464,7 @@ function vAna(){
    '<div class="tw"><table><thead><tr><th>Mes</th><th>Ingr.</th><th>Gastos</th><th>Ahorro</th><th>Saldo</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 
 function vMas(){
-  var a=[['fijos','Gastos fijos','Recibos recurrentes automáticos'],['ahorro','Ahorro y objetivos','Metas y progreso'],['viajes','Viajes de trabajo','Un viaje por carpeta y su reembolso'],['pres','Presupuesto','Límites de gasto por categoría'],['deudas','Deudas pendientes','Lo que te deben y lo que debes'],['seguros','Seguros','Pólizas, renovaciones y coberturas'],['conf','Configuración','Listas, copia de seguridad'],['guia','Guía de uso','Cómo funciona']];
+  var a=[['fijos','Gastos fijos','Recibos recurrentes automáticos'],['ahorro','Ahorro y objetivos','Metas y progreso'],['viajes','Viajes de trabajo','Un viaje por carpeta y su reembolso'],['pres','Presupuesto','Límites de gasto por categoría'],['deudas','Deudas pendientes','Lo que te deben y lo que debes'],['seguros','Seguros y suscripciones','Pólizas, plataformas y renovaciones'],['conf','Configuración','Listas, copia de seguridad'],['guia','Guía de uso','Cómo funciona']];
   return '<div class="list">'+a.map(function(x){return '<button class="item" data-go="'+x[0]+'"><span style="color:var(--blue)">'+ic(x[0]==='viajes'?'viaje':x[0]==='guia'?'cal':x[0]==='calc'?'calc':x[0],24)+'</span><span class="mid"><div class="t">'+x[1]+'</div><div class="s">'+x[2]+'</div></span><span style="color:var(--muted)">›</span></button>'}).join('')+'</div>'+
    '<button class="btn sec" data-act="theme">'+ic('sun',18)+' Cambiar tema claro / oscuro</button>'+
    '<p class="sub" style="text-align:center;margin:16px 0 4px;line-height:1.6">Creado por <b>Zagio</b><br>FinanzApp · '+(window.Android?'versión '+esc(appVersion()):'versión web')+'</p>';}
@@ -567,9 +571,15 @@ function sheetDeuda(d,pre){
    '<div id="wrapCuota" style="display:contents"'+(mens?'':' hidden')+'>'+fld('','Cuota mensual (€)','<input id="f_cuota" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(d.cuota||'')+'">',1)+
    fld('','Desde (mes)','<input id="f_desde" type="month" value="'+esc(d.desde)+'">')+fld('','Hasta (mes, opcional)','<input id="f_hasta" type="month" value="'+esc(d.hasta)+'">')+'</div></div>'+
    '<div class="acts"><button class="btn" data-act="save-deuda"'+(nuevo?'':' data-id="'+d.id+'"')+'>Guardar</button>'+(nuevo?'':'<button class="btn del" data-act="del-deuda" data-id="'+d.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
-/* ===== Seguros ===== */
+/* ===== Seguros y suscripciones ===== */
+// Un mismo listado (S.seguros): los seguros tienen clase vacía y las suscripciones clase 'sus'
 var TIPOS_SEG=['Coche','Moto','Hogar','Vida','Salud','Dental','Mascota','Viaje','Otro'];
+var TIPOS_SUS=['Vídeo','Música','Videojuegos','Software','Nube','Prensa y lectura','Gimnasio y deporte','Telefonía','Otro'];
 var PAGOS_SEG=[['Anual',1],['Semestral',2],['Trimestral',4],['Mensual',12]];
+var MESES_PAGO={Mensual:1,Trimestral:3,Semestral:6,Anual:12};
+var SUS_SUG=[['Netflix','Vídeo'],['Disney+','Vídeo'],['HBO Max','Vídeo'],['Prime Video','Vídeo'],['Movistar Plus+','Vídeo'],['Filmin','Vídeo'],['Apple TV+','Vídeo'],['DAZN','Vídeo'],['YouTube Premium','Vídeo'],
+  ['Spotify','Música'],['Apple Music','Música'],['Amazon Music','Música'],['Xbox Game Pass','Videojuegos'],['PlayStation Plus','Videojuegos'],['Nintendo Switch Online','Videojuegos'],['EA Play','Videojuegos'],['Ubisoft+','Videojuegos'],
+  ['Microsoft 365','Software'],['Adobe Creative Cloud','Software'],['ChatGPT Plus','Software'],['Claude Pro','Software'],['iCloud+','Nube'],['Google One','Nube'],['Dropbox','Nube'],['Amazon Prime','Otro'],['Kindle Unlimited','Prensa y lectura'],['Audible','Prensa y lectura']];
 var COB_SUG={Coche:['Responsabilidad civil obligatoria','Responsabilidad civil voluntaria','Daños propios (todo riesgo)','Asistencia en viaje','Lunas','Robo','Incendio','Defensa jurídica','Accidentes del conductor','Vehículo de sustitución'],
   Moto:['Responsabilidad civil obligatoria','Asistencia en viaje','Robo','Incendio','Daños propios','Accidentes del conductor','Equipamiento del motorista'],
   Hogar:['Continente','Contenido','Daños por agua','Responsabilidad civil familiar','Robo','Rotura de cristales','Fenómenos atmosféricos','Asistencia 24 h','Defensa jurídica'],
@@ -577,49 +587,76 @@ var COB_SUG={Coche:['Responsabilidad civil obligatoria','Responsabilidad civil v
   Salud:['Medicina general','Especialistas','Hospitalización','Urgencias','Pruebas diagnósticas','Copago'],
   Dental:['Revisiones y limpieza','Empastes','Ortodoncia','Implantes'],
   Mascota:['Responsabilidad civil','Asistencia veterinaria','Accidentes'],
-  Viaje:['Asistencia médica','Cancelación','Equipaje','Repatriación']};
-// Días hasta la renovación (negativo si ya pasó)
+  Viaje:['Asistencia médica','Cancelación','Equipaje','Repatriación'],
+  'Vídeo':['Calidad 4K / HDR','Pantallas a la vez','Sin anuncios','Descargas sin conexión','Perfiles'],
+  'Música':['Sin anuncios','Descargas sin conexión','Plan familiar','Audio de alta calidad'],
+  Videojuegos:['Catálogo de juegos','Juego online','Juego en la nube','Juegos del día de lanzamiento','Descuentos en tienda'],
+  Software:['Número de dispositivos','Almacenamiento en la nube','Usuarios incluidos'],
+  Nube:['Almacenamiento','Compartir con la familia','Copia de seguridad del móvil']};
+function esSus(x){return x&&x.clase==='sus'}
+function anual(x){return esSus(x)?r2(num(x.precio)*12/(MESES_PAGO[x.pago]||1)):num(x.prima)}
+// Días hasta la fecha (negativo si ya pasó)
 function diasHasta(f){if(!f)return null;var a=f.split('-'),d=new Date(+a[0],+a[1]-1,+a[2]),h=new Date(today.getFullYear(),today.getMonth(),today.getDate());return Math.round((d-h)/864e5)}
-function chipRenov(sg){var n=diasHasta(sg.renovacion);if(n===null)return '<span class="chip">Sin fecha de renovación</span>';
+// Próximo cobro de una suscripción: avanza la fecha guardada por periodos hasta hoy o después
+function proxCobro(x){if(!x.renovacion)return '';var a=x.renovacion.split('-'),y=+a[0],m=+a[1]-1,d=+a[2],st=MESES_PAGO[x.pago]||1,i=0,f;
+  do{var dm=new Date(y,m+st*i+1,0).getDate(),dt=new Date(y,m+st*i,Math.min(d,dm));f=iso(dt);i++}while(diasHasta(f)<0&&i<600);return f}
+function fechaClave(x){return esSus(x)?proxCobro(x):x.renovacion}
+function chipFecha(x){var f=fechaClave(x),n=diasHasta(f),sus=esSus(x);if(n===null)return '<span class="chip">'+(sus?'Sin fecha de cobro':'Sin fecha de renovación')+'</span>';
   if(n<0)return '<span class="chip bad">Renovación pasada: actualiza la fecha</span>';
-  if(n===0)return '<span class="chip bad">Renueva hoy</span>';
-  return '<span class="chip '+(n<=30?'mid':'ok')+'">Renueva en '+n+' día'+(n===1?'':'s')+'</span>'}
-function pagoSeg(sg){var p=PAGOS_SEG.filter(function(x){return x[0]===sg.pago})[0];return p&&p[1]>1?eur(num(sg.prima)/p[1])+' '+{2:'al semestre',4:'al trimestre',12:'al mes'}[p[1]]:''}
+  if(n===0)return '<span class="chip '+(sus?'mid':'bad')+'">'+(sus?'Se cobra hoy':'Renueva hoy')+'</span>';
+  return '<span class="chip '+(n<=(sus?3:30)?'mid':'ok')+'">'+(sus?'Cobro en ':'Renueva en ')+n+' día'+(n===1?'':'s')+'</span>'}
+function chipRenov(sg){return chipFecha(sg)}
+function porPago(x){var nn={Semestral:2,Trimestral:4,Mensual:12}[x.pago];return nn?eur(anual(x)/nn)+' '+{2:'al semestre',4:'al trimestre',12:'al mes'}[nn]:''}
+function itemSeg(x){var sus=esSus(x),f=fechaClave(x),nc=(x.cob||[]).length;
+  return '<button class="item" data-act="open-seguro" data-id="'+x.id+'"><span class="ico '+(sus?'Gasto':'Ahorro')+'">'+ic(sus?'sus':'seguros',22)+'</span><span class="mid"><div class="t">'+esc(x.nombre)+'</div><div class="s"><span>'+esc(sus?(x.tipo||'Suscripción')+(x.plan?' · '+x.plan:''):(x.compania||x.tipo||''))+'</span>'+(f?'<span>·</span><span>'+(sus?'Próximo cobro ':'Renueva el ')+fdate(f)+'</span>':'')+'</div><div class="s">'+chipFecha(x)+(nc?'<span>'+nc+(sus?' ventaja'+(nc===1?'':'s'):' cobertura'+(nc===1?'':'s'))+'</span>':'')+'</div></span><span class="amt">'+(sus?eur(x.precio)+'<div class="sub" style="text-align:right;font:12px var(--f-body)">'+esc((x.pago||'Mensual').toLowerCase())+'</div>':eur(x.prima)+'<div class="sub" style="text-align:right;font:12px var(--f-body)">al año</div>')+'</span><span style="color:var(--muted)">›</span></button>'}
 function vSeguros(){
-  var T=0;S.seguros.forEach(function(sg){T+=num(sg.prima)});
-  var pr=S.seguros.filter(function(sg){var n=diasHasta(sg.renovacion);return n!==null&&n>=0}).sort(function(a,b){return a.renovacion<b.renovacion?-1:1})[0];
-  var list=S.seguros.length?S.seguros.slice().sort(function(a,b){return (a.renovacion||'9')<(b.renovacion||'9')?-1:1}).map(function(sg){
-    return '<button class="item" data-act="open-seguro" data-id="'+sg.id+'"><span class="ico Ahorro">'+ic('seguros',22)+'</span><span class="mid"><div class="t">'+esc(sg.nombre)+'</div><div class="s"><span>'+esc(sg.compania||sg.tipo||'')+'</span>'+(sg.renovacion?'<span>·</span><span>Renueva el '+fdate(sg.renovacion)+'</span>':'')+'</div><div class="s">'+chipRenov(sg)+'<span>'+(sg.cob||[]).length+' cobertura'+((sg.cob||[]).length===1?'':'s')+'</span></div></span><span class="amt">'+eur(sg.prima)+'<div class="sub" style="text-align:right;font:12px var(--f-body)">al año</div></span><span style="color:var(--muted)">›</span></button>'}).join(''):'<div class="empty">Aún no tienes seguros.<br>Añade el primero con el botón de abajo.</div>';
-  return '<div class="card" style="background:var(--tint)"><div class="kv"><span>Total al año en seguros</span><b style="font:800 20px var(--f-display)">'+eur(T)+'</b></div><div class="kv"><span>Al mes (aprox.)</span><b>'+eur(T/12)+'</b></div>'+(pr?'<div class="kv"><span>Próxima renovación</span><b>'+esc(pr.nombre)+' · '+fdate(pr.renovacion)+'</b></div>':'')+'</div>'+
-   '<p class="sub">Toca un seguro para ver sus coberturas. En Inicio verás siempre un aviso con la próxima renovación (en amarillo cuando falten 30 días o menos).</p><div class="list">'+list+'</div><button class="btn" data-act="new-seguro">＋ Nuevo seguro</button>';}
+  var seg=S.seguros.filter(function(x){return !esSus(x)}),sus=S.seguros.filter(esSus),TS=0,TU=0;
+  seg.forEach(function(x){TS+=anual(x)});sus.forEach(function(x){TU+=anual(x)});
+  var ord=function(a,b){return (fechaClave(a)||'9')<(fechaClave(b)||'9')?-1:1};
+  return '<div class="card" style="background:var(--tint)"><div class="kv"><span>Total al año</span><b style="font:800 20px var(--f-display)">'+eur(TS+TU)+'</b></div><div class="kv"><span>Al mes (aprox.)</span><b>'+eur((TS+TU)/12)+'</b></div>'+
+   '<div style="display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:2px solid var(--line)">'+sub2('Seguros ('+seg.length+')',eur(TS)+' /año')+sub2('Suscripciones ('+sus.length+')',eur(TU/12)+' /mes')+'</div></div>'+
+   '<h3>Seguros</h3><div class="list">'+(seg.length?seg.slice().sort(ord).map(itemSeg).join(''):'<div class="empty">Aún no tienes seguros.</div>')+'</div><button class="btn" data-act="new-seguro">＋ Nuevo seguro</button>'+
+   '<h3>Suscripciones</h3><div class="list">'+(sus.length?sus.slice().sort(ord).map(itemSeg).join(''):'<div class="empty">Aún no tienes suscripciones.<br>Netflix, Spotify, Game Pass…</div>')+'</div><button class="btn" data-act="new-seguro" data-id="sus">＋ Nueva suscripción</button>'+
+   '<p class="sub">En Inicio verás un aviso con la próxima renovación de seguro. La fecha de cobro de las suscripciones avanza sola cada periodo.</p>';}
 function vSeguro(){
-  var sg=byId(S.seguros,ui.seguro);if(!sg)return vSeguros();var cob=sg.cob||[];
-  var head='<div class="card" style="background:var(--tint)"><div class="row2"><span class="chip fix">'+esc(sg.tipo||'Seguro')+'</span>'+chipRenov(sg)+'</div>'+
-    '<div class="kv"><span>Precio al año</span><span class="vtot">'+eur(sg.prima)+'</span></div>'+(pagoSeg(sg)?'<div class="kv"><span>Pago '+esc(sg.pago.toLowerCase())+'</span><b>'+pagoSeg(sg)+'</b></div>':sg.pago?'<div class="kv"><span>Forma de pago</span><b>'+esc(sg.pago)+'</b></div>':'')+
-    (sg.renovacion?'<div class="kv"><span>Fecha de renovación</span><b>'+fdate(sg.renovacion)+'</b></div>':'')+
-    (sg.compania?'<div class="kv"><span>Compañía</span><b>'+esc(sg.compania)+'</b></div>':'')+
-    (sg.poliza?'<div class="kv"><span>Nº de póliza</span><b>'+esc(sg.poliza)+'</b></div>':'')+
-    (sg.telefono?'<div class="kv"><span>Teléfono de asistencia</span><b><a href="tel:'+esc(sg.telefono.replace(/[^\d+]/g,''))+'" style="color:var(--blue)">'+esc(sg.telefono)+'</a></b></div>':'')+
+  var sg=byId(S.seguros,ui.seguro);if(!sg)return vSeguros();var cob=sg.cob||[],sus=esSus(sg),f=fechaClave(sg);
+  var head='<div class="card" style="background:var(--tint)"><div class="row2"><span class="chip fix">'+esc(sg.tipo||(sus?'Suscripción':'Seguro'))+'</span>'+chipFecha(sg)+'</div>'+
+    (sus?'<div class="kv"><span>Precio '+esc((sg.pago||'Mensual').toLowerCase())+'</span><span class="vtot">'+eur(sg.precio)+'</span></div>'+((sg.pago||'Mensual')!=='Anual'?'<div class="kv"><span>Al año</span><b>'+eur(anual(sg))+'</b></div>':'<div class="kv"><span>Al mes (aprox.)</span><b>'+eur(anual(sg)/12)+'</b></div>')+
+       (f?'<div class="kv"><span>Próximo cobro</span><b>'+fdate(f)+'</b></div>':'')+(sg.plan?'<div class="kv"><span>Plan</span><b>'+esc(sg.plan)+'</b></div>':'')+(sg.cuenta?'<div class="kv"><span>Se paga con</span><b>'+esc(sg.cuenta)+'</b></div>':'')
+     :'<div class="kv"><span>Precio al año</span><span class="vtot">'+eur(sg.prima)+'</span></div>'+(porPago(sg)?'<div class="kv"><span>Pago '+esc(sg.pago.toLowerCase())+'</span><b>'+porPago(sg)+'</b></div>':sg.pago?'<div class="kv"><span>Forma de pago</span><b>'+esc(sg.pago)+'</b></div>':'')+
+       (sg.renovacion?'<div class="kv"><span>Fecha de renovación</span><b>'+fdate(sg.renovacion)+'</b></div>':'')+
+       (sg.compania?'<div class="kv"><span>Compañía</span><b>'+esc(sg.compania)+'</b></div>':'')+
+       (sg.poliza?'<div class="kv"><span>Nº de póliza</span><b>'+esc(sg.poliza)+'</b></div>':'')+
+       (sg.telefono?'<div class="kv"><span>Teléfono de asistencia</span><b><a href="tel:'+esc(sg.telefono.replace(/[^\d+]/g,''))+'" style="color:var(--blue)">'+esc(sg.telefono)+'</a></b></div>':''))+
     (sg.obs?'<span class="sub" style="margin:0">'+esc(sg.obs)+'</span>':'')+'</div>';
-  var lc=cob.length?cob.map(function(c){return '<button class="item" data-act="edit-cob" data-id="'+c.id+'"><span class="ico Ingreso">✓</span><span class="mid"><div class="t">'+esc(c.n)+'</div>'+(c.d?'<div class="s"><span>'+esc(c.d)+'</span></div>':'')+'</span></button>'}).join(''):'<div class="empty">Aún no has añadido coberturas.<br>Por ejemplo: responsabilidad civil, lunas, asistencia en viaje…</div>';
-  return head+'<h3>Coberturas ('+cob.length+')</h3><div class="list">'+lc+'</div><button class="btn" data-act="new-cob">＋ Añadir cobertura</button><button class="btn sec" data-act="edit-seguro" data-id="'+sg.id+'">Editar o eliminar seguro</button>';}
-function sheetSeguro(sg){
-  var nuevo=!sg;sg=sg||{nombre:'',tipo:'Coche',compania:'',poliza:'',prima:'',pago:'Anual',renovacion:'',telefono:'',obs:''};
-  return '<h2>'+(nuevo?'Nuevo seguro':'Editar seguro')+'</h2><div class="fgrid">'+
-   fld('','Nombre','<input id="f_nombre" placeholder="Ej. Seguro del coche" autocomplete="off" value="'+esc(sg.nombre)+'">',1)+
+  var lab=sus?'Qué incluye':'Coberturas';
+  var lc=cob.length?cob.map(function(c){return '<button class="item" data-act="edit-cob" data-id="'+c.id+'"><span class="ico Ingreso">✓</span><span class="mid"><div class="t">'+esc(c.n)+'</div>'+(c.d?'<div class="s"><span>'+esc(c.d)+'</span></div>':'')+'</span></button>'}).join(''):
+    '<div class="empty">'+(sus?'Apunta lo que incluye tu plan.<br>Por ejemplo: 4K, 2 pantallas, sin anuncios…':'Aún no has añadido coberturas.<br>Por ejemplo: responsabilidad civil, lunas, asistencia en viaje…')+'</div>';
+  return head+'<h3>'+lab+' ('+cob.length+')</h3><div class="list">'+lc+'</div><button class="btn" data-act="new-cob">＋ '+(sus?'Añadir ventaja':'Añadir cobertura')+'</button><button class="btn sec" data-act="edit-seguro" data-id="'+sg.id+'">Editar o eliminar '+(sus?'suscripción':'seguro')+'</button>';}
+function sheetSeguro(sg,clase){
+  var nuevo=!sg,sus=nuevo?clase==='sus':esSus(sg);
+  sg=sg||(sus?{clase:'sus',nombre:'',tipo:'Vídeo',plan:'',precio:'',pago:'Mensual',renovacion:'',cuenta:S.cfg.cuentas.indexOf('Tarjeta')>-1?'Tarjeta':(S.cfg.cuentas[0]||''),obs:''}:{nombre:'',tipo:'Coche',compania:'',poliza:'',prima:'',pago:'Anual',renovacion:'',telefono:'',obs:''});
+  var tit=sus?(nuevo?'Nueva suscripción':'Editar suscripción'):(nuevo?'Nuevo seguro':'Editar seguro');
+  var campos=sus?
+   fld('','Servicio','<input id="f_nombre" list="sussug" placeholder="Ej. Netflix, Xbox Game Pass" autocomplete="off" value="'+esc(sg.nombre)+'"><datalist id="sussug">'+SUS_SUG.map(function(x){return '<option value="'+esc(x[0])+'">'}).join('')+'</datalist>',1)+
+   fld('','Tipo','<select id="f_tipo">'+opts(TIPOS_SUS,sg.tipo)+'</select>')+fld('','Plan','<input id="f_plan" placeholder="Ej. Premium, Ultimate" autocomplete="off" value="'+esc(sg.plan)+'">')+
+   fld('','Precio (€)','<input id="f_precio" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(sg.precio)+'">')+fld('','Se cobra','<select id="f_pago">'+opts(['Mensual','Trimestral','Semestral','Anual'],sg.pago)+'</select>')+
+   fld('','Próximo cobro','<input id="f_renov" type="date" value="'+esc(proxCobro(sg)||sg.renovacion)+'">')+fld('','Se paga con','<select id="f_cuenta">'+opts(S.cfg.cuentas,sg.cuenta,1)+'</select>')+
+   fld('','Observaciones','<input id="f_obs" placeholder="Ej. cuenta compartida con…" value="'+esc(sg.obs)+'">',1)
+  :fld('','Nombre','<input id="f_nombre" placeholder="Ej. Seguro del coche" autocomplete="off" value="'+esc(sg.nombre)+'">',1)+
    fld('','Tipo','<select id="f_tipo">'+opts(TIPOS_SEG,sg.tipo)+'</select>')+fld('','Compañía','<input id="f_compania" autocomplete="off" value="'+esc(sg.compania)+'">')+
    fld('','Precio al año (€)','<input id="f_prima" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(sg.prima)+'">')+fld('','Forma de pago','<select id="f_pago">'+opts(PAGOS_SEG.map(function(x){return x[0]}),sg.pago)+'</select>')+
    fld('','Fecha de renovación','<input id="f_renov" type="date" value="'+esc(sg.renovacion)+'">')+fld('','Nº de póliza','<input id="f_poliza" autocomplete="off" value="'+esc(sg.poliza)+'">')+
    fld('','Teléfono de asistencia','<input id="f_tel" type="tel" autocomplete="off" value="'+esc(sg.telefono)+'">',1)+
-   fld('','Observaciones','<input id="f_obs" value="'+esc(sg.obs)+'">',1)+'</div>'+
-   (nuevo?'':'<p class="sub">Si lo eliminas se borran también sus coberturas.</p>')+
-   '<div class="acts"><button class="btn" data-act="save-seguro"'+(nuevo?'':' data-id="'+sg.id+'"')+'>'+(nuevo?'Crear seguro':'Guardar')+'</button>'+(nuevo?'':'<button class="btn del" data-act="del-seguro" data-id="'+sg.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
+   fld('','Observaciones','<input id="f_obs" value="'+esc(sg.obs)+'">',1);
+  return '<h2>'+tit+'</h2><div class="fgrid">'+campos+'</div>'+(nuevo?'':'<p class="sub">Si lo eliminas se borra también su lista de '+(sus?'ventajas':'coberturas')+'.</p>')+
+   '<div class="acts"><button class="btn" data-act="save-seguro"'+(nuevo?(sus?' data-id="new-sus"':''):' data-id="'+sg.id+'"')+'>'+(nuevo?'Crear':'Guardar')+'</button>'+(nuevo?'':'<button class="btn del" data-act="del-seguro" data-id="'+sg.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
 function sheetCob(c){
-  var sg=byId(S.seguros,ui.seguro),nuevo=!c;c=c||{n:'',d:''};var usadas=(sg.cob||[]).map(function(x){return x.n});
+  var sg=byId(S.seguros,ui.seguro),sus=esSus(sg),nuevo=!c;c=c||{n:'',d:''};var usadas=(sg.cob||[]).map(function(x){return x.n});
   var sug=(COB_SUG[sg.tipo]||[]).filter(function(x){return usadas.indexOf(x)<0});
-  return '<h2>'+(nuevo?'Añadir cobertura':'Editar cobertura')+'</h2><p class="sub" style="margin:0 0 10px">'+esc(sg.nombre)+'</p><div class="fgrid">'+
-   fld('','Cobertura','<input id="f_cob" list="cobsug" placeholder="Ej. Lunas" autocomplete="off" value="'+esc(c.n)+'"><datalist id="cobsug">'+sug.map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist>',1)+
-   fld('','Detalle (límite, franquicia…)','<input id="f_cobd" placeholder="Ej. Sin franquicia, hasta 600 €" autocomplete="off" value="'+esc(c.d)+'">',1)+'</div>'+
+  return '<h2>'+(sus?(nuevo?'Añadir ventaja':'Editar ventaja'):(nuevo?'Añadir cobertura':'Editar cobertura'))+'</h2><p class="sub" style="margin:0 0 10px">'+esc(sg.nombre)+'</p><div class="fgrid">'+
+   fld('',sus?'Qué incluye':'Cobertura','<input id="f_cob" list="cobsug" placeholder="'+(sus?'Ej. Sin anuncios':'Ej. Lunas')+'" autocomplete="off" value="'+esc(c.n)+'"><datalist id="cobsug">'+sug.map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist>',1)+
+   fld('',sus?'Detalle':'Detalle (límite, franquicia…)','<input id="f_cobd" placeholder="'+(sus?'Ej. 4 pantallas a la vez':'Ej. Sin franquicia, hasta 600 €')+'" autocomplete="off" value="'+esc(c.d)+'">',1)+'</div>'+
    '<div class="acts"><button class="btn" data-act="save-cob"'+(nuevo?'':' data-id="'+c.id+'"')+'>'+(nuevo?'Añadir':'Guardar')+'</button>'+(nuevo?'':'<button class="btn del" data-act="del-cob" data-id="'+c.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
 function vConf(){
   var C=S.cfg;function ta(k,l){return '<label class="f">'+l+' (una por línea)<textarea data-cfg="'+k+'" style="min-height:120px">'+esc(C[k].join('\n'))+'</textarea></label>'}
@@ -821,19 +858,23 @@ function act(a,id){
   case 'wipe':if(armed!=='wipe'){armed='wipe';var b3=document.querySelector('[data-act=wipe]');if(b3)b3.textContent='¿Seguro? Pulsa otra vez';return}armed=null;S=defaults();save();toast('Todo borrado');return;
   case 'wipe-demo':S=defaults();S.demo=false;save();toast('Listo. Empieza a registrar');return;
   case 'theme':{var r=document.documentElement,dk=(r.dataset.theme==='dark')||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=dk?'light':'dark';return}
-  case 'new-seguro':ui.sheet=sheetSeguro();break;
+  case 'new-seguro':ui.sheet=sheetSeguro(null,id);break;
   case 'open-seguro':ui.seguro=id;go('seguro');return;
   case 'edit-seguro':ui.sheet=sheetSeguro(byId(S.seguros,id));break;
-  case 'save-seguro':{var ns=g('f_nombre').trim();if(!ns){toast('Escribe el nombre del seguro');return}
-    var os=id?byId(S.seguros,id):{id:uid(),cob:[]};os.nombre=ns;os.tipo=g('f_tipo');os.compania=g('f_compania').trim();os.prima=num(g('f_prima'));os.pago=g('f_pago');os.renovacion=g('f_renov');os.poliza=g('f_poliza').trim();os.telefono=g('f_tel').trim();os.obs=g('f_obs').trim();
-    if(!id)S.seguros.push(os);ui.seguro=os.id;ui.sheet=null;save();if(ui.view!=='seguro'){ui.view='seguro';window.scrollTo(0,0)}toast(id?'Seguro guardado':'Seguro creado: añade sus coberturas');return}
+  case 'save-seguro':{var nuevoS=!id||id==='new-sus',susN=id==='new-sus'||(!nuevoS&&esSus(byId(S.seguros,id))),ns=g('f_nombre').trim();
+    if(!ns){toast(susN?'Escribe el servicio':'Escribe el nombre del seguro');return}
+    var os=nuevoS?{id:uid(),cob:[]}:byId(S.seguros,id);os.nombre=ns;os.tipo=g('f_tipo');os.pago=g('f_pago');os.renovacion=g('f_renov');os.obs=g('f_obs').trim();
+    if(susN){os.clase='sus';os.plan=g('f_plan').trim();os.precio=num(g('f_precio'));os.cuenta=g('f_cuenta')}
+    else{os.compania=g('f_compania').trim();os.prima=num(g('f_prima'));os.poliza=g('f_poliza').trim();os.telefono=g('f_tel').trim()}
+    if(nuevoS)S.seguros.push(os);ui.seguro=os.id;ui.sheet=null;save();if(ui.view!=='seguro'){ui.view='seguro';window.scrollTo(0,0)}
+    toast(!nuevoS?'Guardado':susN?'Suscripción creada':'Seguro creado: añade sus coberturas');return}
   case 'del-seguro':if(armed!==id){armed=id;var b8=document.querySelector('[data-act=del-seguro]');if(b8)b8.textContent='¿Seguro? Pulsa otra vez';return}
-    S.seguros=S.seguros.filter(function(x){return x.id!==id});armed=null;ui.sheet=null;save();go('seguros');toast('Seguro eliminado');return;
+    S.seguros=S.seguros.filter(function(x){return x.id!==id});armed=null;ui.sheet=null;save();go('seguros');toast('Eliminado');return;
   case 'new-cob':ui.sheet=sheetCob();break;
   case 'edit-cob':{var sc=byId(S.seguros,ui.seguro);ui.sheet=sheetCob(byId(sc.cob||[],id));break}
-  case 'save-cob':{var sc2=byId(S.seguros,ui.seguro),nc=g('f_cob').trim();if(!nc){toast('Escribe la cobertura');return}sc2.cob=sc2.cob||[];
-    if(id){var cc=byId(sc2.cob,id);cc.n=nc;cc.d=g('f_cobd').trim()}else sc2.cob.push({id:uid(),n:nc,d:g('f_cobd').trim()});ui.sheet=null;save();toast(id?'Cobertura guardada':'Cobertura añadida');return}
-  case 'del-cob':{var sc3=byId(S.seguros,ui.seguro);sc3.cob=(sc3.cob||[]).filter(function(x){return x.id!==id});ui.sheet=null;save();toast('Cobertura eliminada');return}
+  case 'save-cob':{var sc2=byId(S.seguros,ui.seguro),nc=g('f_cob').trim();if(!nc){toast('Escribe qué es');return}sc2.cob=sc2.cob||[];
+    if(id){var cc=byId(sc2.cob,id);cc.n=nc;cc.d=g('f_cobd').trim()}else sc2.cob.push({id:uid(),n:nc,d:g('f_cobd').trim()});ui.sheet=null;save();toast(id?'Guardado':'Añadido');return}
+  case 'del-cob':{var sc3=byId(S.seguros,ui.seguro);sc3.cob=(sc3.cob||[]).filter(function(x){return x.id!==id});ui.sheet=null;save();toast('Eliminado');return}
   case 'close':case 'close-bg':ui.sheet=null;break;}
   render();}
 
@@ -856,6 +897,7 @@ document.addEventListener('change',function(e){var t=e.target;
   else if(t.id==='f_naturaleza'&&ui.sheet){var wf=document.getElementById('wrapFijo');if(wf)wf.hidden=t.value!=='Fijo'}
   else if(t.id==='f_trabajo'&&ui.sheet){var wt=document.getElementById('wrapTrab');if(wt)wt.hidden=t.value!=='Sí'}
   else if(t.id==='f_categoria'&&ui.sheet){visDeuda()}
+  else if(t.id==='f_nombre'&&ui.sheet&&document.getElementById('f_plan')){var su=SUS_SUG.filter(function(x){return normNom(x[0])===normNom(t.value)})[0],st=document.getElementById('f_tipo');if(su&&st)st.value=su[1]}
   else if(t.id==='f_gconcepto'&&ui.sheet){var sc=document.getElementById('f_categoria'),gc=guessCat(t.value);if(sc&&!sc.value&&gc)sc.value=gc}
   else if(t.id==='f_modo'&&ui.sheet){document.getElementById('wrapTotal').hidden=t.value==='Mensual';document.getElementById('wrapCuota').hidden=t.value!=='Mensual'}
   else if(t.id==='f_deuda'&&ui.sheet){var dx=byId(S.deudas,t.value),im=document.getElementById('f_importe');if(dx&&im&&!im.value){var ix=infoDeuda(dx);im.value=ix.mens?num(dx.cuota):Math.max(ix.pend,0)}}
