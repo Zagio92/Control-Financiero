@@ -432,7 +432,8 @@ function vAna(){
 function vMas(){
   var a=[['fijos','Gastos fijos','Recibos recurrentes automáticos'],['ahorro','Ahorro y objetivos','Metas y progreso'],['viajes','Viajes de trabajo','Un viaje por carpeta y su reembolso'],['pres','Presupuesto','Límites de gasto por categoría'],['deudas','Deudas pendientes','Dinero que te deben'],['conf','Configuración','Listas, copia de seguridad'],['guia','Guía de uso','Cómo funciona']];
   return '<div class="list">'+a.map(function(x){return '<button class="item" data-go="'+x[0]+'"><span style="color:var(--blue)">'+ic(x[0]==='viajes'?'viaje':x[0]==='guia'?'cal':x[0]==='calc'?'calc':x[0],24)+'</span><span class="mid"><div class="t">'+x[1]+'</div><div class="s">'+x[2]+'</div></span><span style="color:var(--muted)">›</span></button>'}).join('')+'</div>'+
-   '<button class="btn sec" data-act="theme">'+ic('sun',18)+' Cambiar tema claro / oscuro</button>';}
+   '<button class="btn sec" data-act="theme">'+ic('sun',18)+' Cambiar tema claro / oscuro</button>'+
+   '<p class="sub" style="text-align:center;margin:16px 0 4px;line-height:1.6">Creado por <b>Zagio</b><br>FinanzApp · '+(window.Android?'versión '+esc(appVersion()):'versión web')+'</p>';}
 
 function vFijos(){
   var k=key(),n=S.fijos.filter(function(f){return fijoStatus(f,k)==='suma'}).length;
