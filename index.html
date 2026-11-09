@@ -467,7 +467,9 @@ function vMas(){
   var a=[['fijos','Gastos fijos','Recibos recurrentes automáticos'],['ahorro','Ahorro y objetivos','Metas y progreso'],['viajes','Viajes de trabajo','Un viaje por carpeta y su reembolso'],['pres','Presupuesto','Límites de gasto por categoría'],['deudas','Deudas pendientes','Lo que te deben y lo que debes'],['seguros','Seguros y suscripciones','Pólizas, plataformas y renovaciones'],['conf','Configuración','Listas, copia de seguridad'],['guia','Guía de uso','Cómo funciona']];
   return '<div class="list">'+a.map(function(x){return '<button class="item" data-go="'+x[0]+'"><span style="color:var(--blue)">'+ic(x[0]==='viajes'?'viaje':x[0]==='guia'?'cal':x[0]==='calc'?'calc':x[0],24)+'</span><span class="mid"><div class="t">'+x[1]+'</div><div class="s">'+x[2]+'</div></span><span style="color:var(--muted)">›</span></button>'}).join('')+'</div>'+
    '<button class="btn sec" data-act="theme">'+ic('sun',18)+' Cambiar tema claro / oscuro</button>'+
-   '<p class="sub" style="text-align:center;margin:16px 0 4px;line-height:1.6">Creado por <b>Zagio</b><br>FinanzApp · '+(window.Android?'versión '+esc(appVersion()):'versión web')+'</p>';}
+   '<p class="sub" style="text-align:center;margin:16px 0 4px;line-height:1.6">Creado por <b>Zagio</b><br>FinanzApp · '+(window.Android?'versión '+esc(appVersion()):'versión web')+'</p>'+
+   '<a class="btn sec" href="https://buymeacoffee.com/zagio92" target="_blank" rel="noopener" style="display:flex;justify-content:center;align-items:center;gap:8px;text-decoration:none;align-self:center;margin:0 auto 8px;padding:10px 18px">☕ Invítame a un café</a>'+
+   '<p class="sub" style="text-align:center;margin:0 0 6px">Si la app te resulta útil, puedes apoyar su desarrollo.</p>';}
 
 function vFijos(){
   var k=key(),n=S.fijos.filter(function(f){return fijoStatus(f,k)==='suma'}).length;
