@@ -129,6 +129,12 @@ nav.tabs button[aria-current=page]{color:var(--blue);background:var(--tint)}
 .pie{display:block;width:min(240px,70vw);height:auto;margin:4px auto}
 .pie .c1{fill:var(--ink);font:800 17px var(--f-display);font-variant-numeric:tabular-nums}
 .pie .c2{fill:var(--muted);font:600 11px var(--f-body)}
+.notif{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border-radius:14px;padding:12px 14px;border:1px solid var(--line);background:var(--blue-bg);color:var(--ink)}
+.notif.mid{background:var(--amber-bg);border-color:transparent}
+.notif.bad{background:var(--red-bg);border-color:transparent}
+.notif .ni{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface);color:var(--blue)}
+.notif.mid .ni{color:var(--amber)}.notif.bad .ni{color:var(--red)}
+.notif .nt{font-weight:700}.notif .ns{font-size:13px;color:var(--muted)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;flex:none}
 .chart text{fill:var(--muted);font:10px var(--f-body)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
@@ -352,13 +358,22 @@ function detallesInicio(t){
   var f3='<div class="kv"><span>Te queda para ocio</span><b style="'+(rest<0?'color:var(--red)':'color:var(--green)')+'">'+eur(rest)+'</b></div>'+
     '<div style="display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:2px solid var(--line)">'+sub2(etq,eur(base))+sub2('Gastado en Ocio',eur(gO))+'</div>'+
     (base===0?'<span class="sub" style="margin:0">Pon un límite de Ocio en Presupuesto o registra tu nómina para calcularlo.</span>':'');
-  var ren=(S.seguros||[]).filter(function(sg){var n=diasHasta(sg.renovacion);return n!==null&&n<=30}).sort(function(a,b){return a.renovacion<b.renovacion?-1:1});
-  var f4=ren.length?'<div class="kv"><span style="color:var(--amber);font-weight:700">Seguros que renuevan pronto</span><b>'+ren.length+'</b></div><div style="display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:2px solid var(--line)">'+ren.map(function(sg){var n=diasHasta(sg.renovacion);return sub2(esc(sg.nombre),n<0?'<span style="color:var(--red)">fecha pasada</span>':n===0?'hoy':fdate(sg.renovacion)+' · '+n+' d')}).join('')+'</div>':'';
-  return f1+f2+f4+f3}
+  return f1+f2+f3}
+// Aviso de la próxima renovación de seguro (o de una fecha ya pasada sin actualizar)
+function avisoSeguro(){
+  var ls=(S.seguros||[]).filter(function(sg){return diasHasta(sg.renovacion)!==null}).sort(function(a,b){return a.renovacion<b.renovacion?-1:1});
+  if(!ls.length)return '';
+  var pas=ls.filter(function(sg){return diasHasta(sg.renovacion)<0}),fut=ls.filter(function(sg){return diasHasta(sg.renovacion)>=0});
+  var sg,cls,tit,txt;
+  if(pas.length){sg=pas[0];cls='bad';tit='Renovación pasada: '+esc(sg.nombre);txt='Renovaba el '+fdate(sg.renovacion)+'. Toca para poner la nueva fecha.'+(pas.length>1?' Hay '+(pas.length-1)+' más.':'')}
+  else{sg=fut[0];var n=diasHasta(sg.renovacion);cls=n<=30?'mid':'';tit='Próxima renovación: '+esc(sg.nombre);
+    var pronto=fut.filter(function(x){return diasHasta(x.renovacion)<=30}).length-1;
+    txt=(n===0?'Renueva hoy':n===1?'Renueva mañana':'Renueva en '+n+' días')+' · <span style="white-space:nowrap">'+fdate(sg.renovacion)+'</span>'+(num(sg.prima)?' · <span style="white-space:nowrap">'+eur(sg.prima)+'/año</span>':'')+(pronto>0?' · y '+pronto+' más en 30 días':'')}
+  return '<button class="notif '+cls+'" data-act="open-seguro" data-id="'+sg.id+'"><span class="ni">'+ic('seguros',22)+'</span><span style="flex:1;min-width:0"><div class="nt">'+tit+'</div><div class="ns">'+txt+'</div></span><span style="color:var(--muted)">›</span></button>'}
 function vInicio(){
   var t=tot(key()),bad=S.movs.filter(function(m){return !m.tipo||(m.tipo!=='Transferencia'&&!m.categoria)}).length;
   var cafes=t.cats['Cafés y pequeños gastos']||0;
-  return '<div class="kpis">'+kpi('in','Ingresos',t.Ingreso)+kpi('out','Gastos',t.Gasto)+kpi('sav','Ahorro registrado',t.Ahorro)+kpi('bal','Saldo del mes',t.saldo,1)+'</div>'+
+  return avisoSeguro()+'<div class="kpis">'+kpi('in','Ingresos',t.Ingreso)+kpi('out','Gastos',t.Gasto)+kpi('sav','Ahorro registrado',t.Ahorro)+kpi('bal','Saldo del mes',t.saldo,1)+'</div>'+
   '<div class="card"><h3>Detalles</h3>'+detallesInicio(t)+'</div>'+
   (bad?'<div class="status warn">⚠ '+bad+' movimiento(s) sin categoría: revísalos en Movimientos</div>':'<div class="status">✔ Todo en orden</div>')+
   '<button class="btn green" data-act="new-mov" style="font-size:16px;padding:15px">＋ Nuevo movimiento</button>'+
@@ -567,7 +582,7 @@ function vSeguros(){
   var list=S.seguros.length?S.seguros.slice().sort(function(a,b){return (a.renovacion||'9')<(b.renovacion||'9')?-1:1}).map(function(sg){
     return '<button class="item" data-act="open-seguro" data-id="'+sg.id+'"><span class="ico Ahorro">'+ic('seguros',22)+'</span><span class="mid"><div class="t">'+esc(sg.nombre)+'</div><div class="s"><span>'+esc(sg.compania||sg.tipo||'')+'</span>'+(sg.renovacion?'<span>·</span><span>Renueva el '+fdate(sg.renovacion)+'</span>':'')+'</div><div class="s">'+chipRenov(sg)+'<span>'+(sg.cob||[]).length+' cobertura'+((sg.cob||[]).length===1?'':'s')+'</span></div></span><span class="amt">'+eur(sg.prima)+'<div class="sub" style="text-align:right;font:12px var(--f-body)">al año</div></span><span style="color:var(--muted)">›</span></button>'}).join(''):'<div class="empty">Aún no tienes seguros.<br>Añade el primero con el botón de abajo.</div>';
   return '<div class="card" style="background:var(--tint)"><div class="kv"><span>Total al año en seguros</span><b style="font:800 20px var(--f-display)">'+eur(T)+'</b></div><div class="kv"><span>Al mes (aprox.)</span><b>'+eur(T/12)+'</b></div>'+(pr?'<div class="kv"><span>Próxima renovación</span><b>'+esc(pr.nombre)+' · '+fdate(pr.renovacion)+'</b></div>':'')+'</div>'+
-   '<p class="sub">Toca un seguro para ver sus coberturas. Te avisamos en Inicio cuando falten 30 días o menos para renovar.</p><div class="list">'+list+'</div><button class="btn" data-act="new-seguro">＋ Nuevo seguro</button>';}
+   '<p class="sub">Toca un seguro para ver sus coberturas. En Inicio verás siempre un aviso con la próxima renovación (en amarillo cuando falten 30 días o menos).</p><div class="list">'+list+'</div><button class="btn" data-act="new-seguro">＋ Nuevo seguro</button>';}
 function vSeguro(){
   var sg=byId(S.seguros,ui.seguro);if(!sg)return vSeguros();var cob=sg.cob||[];
   var head='<div class="card" style="background:var(--tint)"><div class="row2"><span class="chip fix">'+esc(sg.tipo||'Seguro')+'</span>'+chipRenov(sg)+'</div>'+
