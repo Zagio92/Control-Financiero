@@ -374,7 +374,7 @@ function vInicio(){
   var t=tot(key()),bad=S.movs.filter(function(m){return !m.tipo||(m.tipo!=='Transferencia'&&!m.categoria)}).length;
   var cafes=t.cats['Cafés y pequeños gastos']||0;
   return avisoSeguro()+'<div class="kpis">'+kpi('in','Ingresos',t.Ingreso)+kpi('out','Gastos',t.Gasto)+kpi('sav','Ahorro registrado',t.Ahorro)+kpi('bal','Saldo del mes',t.saldo,1)+'</div>'+
-  '<div class="card"><h3>Detalles</h3>'+detallesInicio(t)+'</div>'+
+  dondeCard()+
   (bad?'<div class="status warn">⚠ '+bad+' movimiento(s) sin categoría: revísalos en Movimientos</div>':'<div class="status">✔ Todo en orden</div>')+
   '<button class="btn green" data-act="new-mov" style="font-size:16px;padding:15px">＋ Nuevo movimiento</button>'+
   '<h3>Accesos rápidos</h3><div class="grid2">'+
@@ -438,7 +438,7 @@ function pieSvg(sl,total){
   var arcs=sl.map(function(x){var len=x.v/total*C,gap=sl.length>1?Math.min(1.5,len/3):0;
     var c='<circle cx="100" cy="100" r="'+R+'" fill="none" stroke="'+x.col+'" stroke-width="'+W+'" stroke-dasharray="'+Math.max(len-gap,0).toFixed(2)+' '+C.toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 100 100)"><title>'+esc(x.n)+': '+eur(x.v)+'</title></circle>';off+=len;return c}).join('');
   return '<svg class="pie" viewBox="0 0 200 200" role="img" aria-label="Gastos del mes por categoría">'+arcs+'<text class="c1" x="100" y="101" text-anchor="middle">'+eur(total)+'</text><text class="c2" x="100" y="119" text-anchor="middle">gastos del mes</text></svg>'}
-function vAna(){
+function dondeCard(){
   var t=tot(key()),all=Object.keys(t.cats).map(function(c){return [c,t.cats[c]]}).filter(function(e){return e[1]>0}).sort(function(a,b){return b[1]-a[1]});
   var ent=all.slice(0,10),resto=0;all.slice(10).forEach(function(e){resto+=e[1]});
   var sl=ent.map(function(e,i){return {n:e[0],v:e[1],col:PAL[i%PAL.length]}});if(resto>0)sl.push({n:'Resto de categorías',v:resto,col:PAL_OTROS});
@@ -448,9 +448,12 @@ function vAna(){
   if(!sl.length)top='<div class="empty">Sin gastos este mes.</div>';
   else if(ui.anaV==='queso')top=pieSvg(sl,t.Gasto)+'<div style="display:flex;flex-direction:column;gap:6px">'+sl.map(function(x){return '<div class="row2"><span style="display:flex;align-items:center;min-width:0"><i class="dot" style="background:'+x.col+'"></i>'+esc(x.n)+'</span><b style="font-variant-numeric:tabular-nums;white-space:nowrap">'+eur(x.v)+' <span class="sub">· '+pct(x.v)+'%</span></b></div>'}).join('')+'</div>';
   else top=sl.map(function(x){return '<div style="display:flex;flex-direction:column;gap:4px"><div class="row2"><span style="display:flex;align-items:center;min-width:0"><i class="dot" style="background:'+x.col+'"></i>'+esc(x.n)+'</span><b style="font-variant-numeric:tabular-nums;white-space:nowrap">'+eur(x.v)+' <span class="sub">· '+pct(x.v)+'%</span></b></div><div class="bar"><i style="width:'+(sl[0].v?x.v/sl[0].v*100:0)+'%;background:'+x.col+'"></i></div></div>'}).join('');
+  return '<div class="card"><h3>Dónde se va el dinero</h3>'+sw+top+'<div class="kv" style="border-top:1px solid var(--line);padding-top:8px"><span>Total gastos del mes</span><b>'+eur(t.Gasto)+'</b></div></div>'}
+function vAna(){
+  var t=tot(key());
   var ev=chartEvol();
   var rows=ev.D.slice().reverse().map(function(d){return '<tr><td>'+MESES[+d.k.slice(5,7)-1].slice(0,3)+' '+d.k.slice(0,4)+'</td><td>'+nf.format(d.i)+'</td><td>'+nf.format(d.g)+'</td><td>'+nf.format(d.a)+'</td><td'+(d.s<0?' class="neg"':'')+'>'+nf.format(d.s)+'</td></tr>'}).join('');
-  return '<div class="card"><h3>Dónde se va el dinero</h3>'+sw+top+'<div class="kv" style="border-top:1px solid var(--line);padding-top:8px"><span>Total gastos del mes</span><b>'+eur(t.Gasto)+'</b></div></div>'+
+  return '<div class="card"><h3>Detalles</h3>'+detallesInicio(t)+'</div>'+
    '<div class="card"><h3>Evolución de los últimos 12 meses</h3><div class="legend"><span><i style="background:var(--green)"></i>Ingresos</span><span><i style="background:var(--red)"></i>Gastos</span><span><i style="background:var(--blue)"></i>Ahorro</span></div>'+ev.svg+
    '<div class="tw"><table><thead><tr><th>Mes</th><th>Ingr.</th><th>Gastos</th><th>Ahorro</th><th>Saldo</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 
