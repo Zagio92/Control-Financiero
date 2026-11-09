@@ -99,6 +99,17 @@ class MainActivity : ComponentActivity() {
                     view: WebView,
                     request: WebResourceRequest
                 ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
+
+                // Enlaces externos (teléfono, webs...) se abren con la app que corresponda
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (request.url.host == "appassets.androidplatform.net") return false
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, request.url))
+                    } catch (e: Exception) {
+                        toast("No hay ninguna app para abrir este enlace")
+                    }
+                    return true
+                }
             }
             webChromeClient = object : WebChromeClient() {
                 override fun onShowFileChooser(
