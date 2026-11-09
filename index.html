@@ -328,9 +328,12 @@ function kpi(cls,l,v,neg){return '<div class="kpi '+cls+'"><h3>'+l+'</h3><div cl
 
 function sub2(a,b){return '<div class="kv" style="font-size:13px"><span style="color:var(--muted);min-width:0">'+a+'</span><b style="font-weight:600">'+b+'</b></div>'}
 function detallesInicio(t){
-  var k=key(),fj=S.fijos.filter(function(f){return f.tipo==='Gasto'&&fijoStatus(f,k)==='suma'}).sort(function(a,b){return num(b.importe)-num(a.importe)});
-  var f1='<div class="kv"><span>Gastos fijos del mes ('+fj.length+')</span><b>'+eur(t.fijosGasto)+'</b></div>'+
-    (fj.length?'<div style="display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:2px solid var(--line)">'+fj.map(function(f){return sub2(esc(f.concepto)+(f.banco?' · '+esc(f.banco):''),eur(f.importe))}).join('')+'</div>':'');
+  var k=key(),fj=S.fijos.filter(function(f){var st=fijoStatus(f,k);return f.tipo==='Gasto'&&(st==='suma'||st==='sustituido')}).map(function(f){
+    if(fijoStatus(f,k)==='suma')return {f:f,imp:num(f.importe),aj:false};
+    var r=0;S.movs.forEach(function(m){if(m.fijo===f.concepto&&m.fecha.slice(0,7)===k)r+=num(m.importe)});return {f:f,imp:r2(r),aj:true}}).sort(function(a,b){return b.imp-a.imp});
+  var fjT=0;fj.forEach(function(x){fjT+=x.imp});fjT=r2(fjT);
+  var f1='<div class="kv"><span>Gastos fijos del mes ('+fj.length+')</span><b>'+eur(fjT)+'</b></div>'+
+    (fj.length?'<div style="display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:2px solid var(--line)">'+fj.map(function(x){return sub2(esc(x.f.concepto)+(x.f.banco?' · '+esc(x.f.banco):'')+(x.aj?' <span class="chip fix">✍ ajustado</span>':''),eur(x.imp))}).join('')+'</div>':'');
   var deu=0,dl=[];personas().forEach(function(p){if(p.pend>0){deu+=p.pend;dl.push([p.nombre,p.pend])}});deu=r2(deu);dl.sort(function(a,b){return b[1]-a[1]});
   var rc=deu>0?'color:var(--red);':'';
   var f2='<div class="kv"><span style="'+rc+'font-weight:700">Deudas pendientes</span><b style="'+rc+'">'+eur(deu)+'</b></div>'+
@@ -360,7 +363,7 @@ function detalleItems(){
   S.fijos.forEach(function(f){if(fijoStatus(f,k)==='suma'){var dim=new Date(ui.y,ui.m+1,0).getDate();
     items.push({src:'F',id:f.id,fecha:k+'-'+p2(Math.min(Math.max(+f.dia||1,1),dim)),concepto:f.concepto,tipo:f.tipo,cat:f.categoria,imp:num(f.importe),sub:f.cuenta});}});
   var man=S.movs.filter(function(m){return m.fecha.slice(0,7)===k}).map(function(m){
-    return {src:'R',id:m.id,fecha:m.fecha,concepto:m.concepto,tipo:m.tipo,cat:m.categoria,imp:num(m.importe),sub:m.cuenta,trab:m.trabajo==='Sí',reemb:m.reemb==='Sí',vj:(byId(S.viajes,m.viajeId||m.viajePago)||{}).nombre,meta:(byId(S.metas,m.meta)||{}).n,deuda:(byId(S.deudas,m.deuda)||{}).deudor}});
+    return {src:'R',id:m.id,fecha:m.fecha,concepto:m.concepto,tipo:m.tipo,cat:m.categoria,imp:num(m.importe),sub:m.cuenta,trab:m.trabajo==='Sí',reemb:m.reemb==='Sí',vj:(byId(S.viajes,m.viajeId||m.viajePago)||{}).nombre,fj:m.naturaleza==='Fijo'&&m.fijo?m.fijo:'',meta:(byId(S.metas,m.meta)||{}).n,deuda:(byId(S.deudas,m.deuda)||{}).deudor}});
   var all=items.concat(man),dir=ui.ord==='asc'?1:-1;
   all.forEach(function(x,i){x._i=i});
   // Por fecha; con la misma fecha se mantiene el orden en que se apuntaron
@@ -371,8 +374,8 @@ function vMovs(){
   if(ui.filter!=='Todos')its=its.filter(function(i){return i.tipo===ui.filter});
   var fl=['Todos','Gasto','Ingreso','Ahorro','Transferencia'].map(function(f){return '<button data-filter="'+f+'" aria-pressed="'+(ui.filter===f)+'">'+f+'</button>'}).join('');
   var list=its.length?its.map(function(i){
-    return '<button class="item" data-act="'+(i.src==='F'?'edit-fijo':'edit-mov')+'" data-id="'+i.id+'"><span class="ico '+i.tipo+'">'+catIcon(i.cat,i.tipo)+'</span><span class="mid"><div class="t">'+esc(i.concepto||'(sin concepto)')+'</div><div class="s"><span>'+fdate(i.fecha)+'</span><span>·</span><span>'+esc(i.cat||'—')+'</span>'+
-    (i.src==='F'?'<span class="chip fix">🔁 Fijo automático</span>':'')+(i.meta?'<span class="chip ok">→ '+esc(i.meta)+'</span>':'')+(i.deuda?'<span class="chip ok">Deuda · '+esc(i.deuda)+'</span>':'')+(!i.vj&&i.trab?'<span class="chip mid">Trabajo</span>':'')+(i.reemb&&!i.vj?'<span class="chip">Reembolsable</span>':'')+'</div>'+(i.vj?'<div class="s"><span class="chip mid">✈ '+esc(i.vj)+'</span></div>':'')+'</span><span class="amt '+i.tipo+'">'+(i.tipo==='Gasto'?'−':i.tipo==='Ingreso'?'+':'')+eur(i.imp)+'</span></button>'}).join(''):
+    return '<button class="item" data-act="'+(i.src==='F'?'ajustar-fijo':'edit-mov')+'" data-id="'+i.id+'"><span class="ico '+i.tipo+'">'+catIcon(i.cat,i.tipo)+'</span><span class="mid"><div class="t">'+esc(i.concepto||'(sin concepto)')+'</div><div class="s"><span>'+fdate(i.fecha)+'</span><span>·</span><span>'+esc(i.cat||'—')+'</span>'+
+    (i.src==='F'?'<span class="chip fix">🔁 Fijo automático</span>':i.fj?'<span class="chip fix">✍ Fijo ajustado este mes</span>':'')+(i.meta?'<span class="chip ok">→ '+esc(i.meta)+'</span>':'')+(i.deuda?'<span class="chip ok">Deuda · '+esc(i.deuda)+'</span>':'')+(!i.vj&&i.trab?'<span class="chip mid">Trabajo</span>':'')+(i.reemb&&!i.vj?'<span class="chip">Reembolsable</span>':'')+'</div>'+(i.vj?'<div class="s"><span class="chip mid">✈ '+esc(i.vj)+'</span></div>':'')+'</span><span class="amt '+i.tipo+'">'+(i.tipo==='Gasto'?'−':i.tipo==='Ingreso'?'+':'')+eur(i.imp)+'</span></button>'}).join(''):
     '<div class="empty">No hay movimientos en este mes.<br>Pulsa <b>+</b> para registrar el primero.</div>';
   return '<div class="card" style="flex-direction:row;justify-content:space-between;gap:6px;text-align:center">'+
    [['Ingresos',t.Ingreso,'var(--green)'],['Gastos',t.Gasto,'var(--red)'],['Saldo',t.saldo,t.saldo<0?'var(--red)':'var(--ink)']].map(function(a){return '<div style="flex:1;min-width:0"><h3>'+a[0]+'</h3><b style="color:'+a[2]+';font-variant-numeric:tabular-nums;font-size:14px;overflow-wrap:anywhere">'+eur(a[1])+'</b></div>'}).join('')+'</div>'+
@@ -542,7 +545,7 @@ function vConf(){
   '<div class="card"><h3>Datos</h3><div class="acts"><button class="btn sec" data-act="demo">Cargar datos de ejemplo</button><button class="btn del" data-act="wipe">Borrar todo</button></div></div>';}
 
 function vGuia(){
-  var g=[['Elegir mes','Usa las flechas o toca el mes de arriba. Todas las pantallas siguen ese mes. Por defecto se abre el mes actual.'],['Registrar un movimiento','Botón verde +. Rellena concepto, tipo, categoría e importe (positivo). La fecha es hoy, o el día 1 si estás viendo otro mes; puedes cambiarla.'],['Gastos fijos','En Más › Gastos fijos escribe una vez cada recibo recurrente. Se suma solo en cada mes entre Desde y Hasta, sin apuntarlo en Movimientos.'],['Cambiar un fijo','Pausar: Activo = No. Subida de precio: pon «Hasta» en el último mes con el importe antiguo y crea otro con el nuevo importe y «Desde» en el primer mes nuevo. Borrar: elimínalo.'],['Un recibo que varía','Si un mes la factura real es distinta (luz, agua), regístrala en Movimientos y elige el concepto en «Fijo asociado». Ese mes cuenta el importe real.'],['Presupuesto','Escribe el límite de cada categoría. El estado pasa a «Cerca del límite» al 80% y a «Excedido» al superarlo.'],['Viajes de trabajo','En Más › Viajes de trabajo crea un viaje (por ejemplo «Viaje a Barcelona») y entra en él para añadir cada gasto: café, tren, hotel… Se van sumando al total del viaje y cada uno cuenta como Gasto en Movimientos. Cuando te lo paguen, pulsa PAGADO: se anota un Ingreso «Reembolsos de trabajo» con lo cobrado.'],['Transferencias','Entre tus cuentas usa Tipo = Transferencia: no cuenta como gasto ni ingreso.']];
+  var g=[['Elegir mes','Usa las flechas o toca el mes de arriba. Todas las pantallas siguen ese mes. Por defecto se abre el mes actual.'],['Registrar un movimiento','Botón verde +. Rellena concepto, tipo, categoría e importe (positivo). La fecha es hoy, o el día 1 si estás viendo otro mes; puedes cambiarla.'],['Gastos fijos','En Más › Gastos fijos escribe una vez cada recibo recurrente. Se suma solo en cada mes entre Desde y Hasta, sin apuntarlo en Movimientos.'],['Cambiar un fijo','Pausar: Activo = No. Subida de precio: pon «Hasta» en el último mes con el importe antiguo y crea otro con el nuevo importe y «Desde» en el primer mes nuevo. Borrar: elimínalo.'],['Un recibo que varía','Si un mes la factura real es distinta (por ejemplo internet 31 € en vez de 30 €), toca ese gasto fijo en Movimientos, cambia el importe y guarda. Solo cambia ese mes; el gasto fijo sigue igual para los demás. Para cambiarlo todos los meses, usa «Cambiar el gasto fijo».'],['Presupuesto','Escribe el límite de cada categoría. El estado pasa a «Cerca del límite» al 80% y a «Excedido» al superarlo.'],['Viajes de trabajo','En Más › Viajes de trabajo crea un viaje (por ejemplo «Viaje a Barcelona») y entra en él para añadir cada gasto: café, tren, hotel… Se van sumando al total del viaje y cada uno cuenta como Gasto en Movimientos. Cuando te lo paguen, pulsa PAGADO: se anota un Ingreso «Reembolsos de trabajo» con lo cobrado.'],['Transferencias','Entre tus cuentas usa Tipo = Transferencia: no cuenta como gasto ni ingreso.']];
   return '<div class="list">'+g.map(function(x,i){return '<div class="card" style="gap:4px"><b>'+x[0]+'</b><span class="sub" style="margin:0">'+x[1]+'</span></div>'}).join('')+'</div>';}
 
 /* ===== Formularios (hoja inferior) ===== */
@@ -554,7 +557,10 @@ function sheetMov(m){
   m=(m&&!m._new)?m:Object.assign({fecha:cur?iso(today):key()+'-01',concepto:'',tipo:'Gasto',categoria:'',importe:'',cuenta:S.cfg.cuentas[0]||'',naturaleza:'Variable',trabajo:'No',viaje:'',reemb:'No',reembolsado:'',obs:'',fijo:''},pre||{});
   var tipos=['Gasto','Ingreso','Ahorro','Transferencia'];
   var cats=m.tipo==='Gasto'?S.cfg.catGasto:S.cfg.catIngreso;
-  return '<h2>'+(nuevo?'Nuevo movimiento':'Editar movimiento')+'</h2><div class="fgrid">'+
+    var fx=m.naturaleza==='Fijo'&&m.fijo?S.fijos.filter(function(f){return f.concepto===m.fijo})[0]:null;
+  return '<h2>'+(pre&&pre._ajuste?'Ajustar «'+esc(m.concepto)+'» este mes':nuevo?'Nuevo movimiento':'Editar movimiento')+'</h2>'+
+   (fx?'<p class="sub" style="margin:0 0 10px">'+(nuevo?'Cambia el importe solo para '+MESES[+m.fecha.slice(5,7)-1].toLowerCase()+'. El gasto fijo sigue igual ('+eur(fx.importe)+') para los demás meses.':'Este importe sustituye al gasto fijo «'+esc(fx.concepto)+'» ('+eur(fx.importe)+') solo en '+MESES[+m.fecha.slice(5,7)-1].toLowerCase()+'. Si lo eliminas, vuelve a contar el importe fijo.')+'</p>':'')+
+   '<div class="fgrid">'+
    fld('','Concepto','<input id="f_concepto" value="'+esc(m.concepto)+'" autocomplete="off">',1)+
    fld('','Tipo','<select id="f_tipo">'+opts(tipos,m.tipo)+'</select>')+
    fld('','Importe (€, positivo)','<input id="f_importe" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(m.importe)+'">')+
@@ -571,7 +577,8 @@ function sheetMov(m){
    fld('','Viaje asociado','<input id="f_viaje" value="'+esc(m.viaje)+'">')+
    fld('','Importe reembolsado (€)','<input id="f_reembolsado" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(m.reembolsado||'')+'">')+'</div>'+
    fld('','Observaciones','<input id="f_obs" value="'+esc(m.obs)+'">',1)+'</div>'+
-   '<div class="acts"><button class="btn" data-act="save-mov"'+(nuevo?'':' data-id="'+m.id+'"')+'>Guardar</button>'+(nuevo?'':'<button class="btn del" data-act="del-mov" data-id="'+m.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
+   '<div class="acts"><button class="btn" data-act="save-mov"'+(nuevo?'':' data-id="'+m.id+'"')+'>Guardar</button>'+(nuevo?'':'<button class="btn del" data-act="del-mov" data-id="'+m.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>'+
+   (fx?'<button class="btn sec" data-act="edit-fijo" data-id="'+fx.id+'" style="width:100%;margin-top:8px">Cambiar el gasto fijo (todos los meses)</button>':'');}
 function appVersion(){try{return window.Android.version()}catch(e){return '?'}}
 function bancos(){var u={};S.fijos.forEach(function(f){if(f.banco)u[f.banco]=1});return Object.keys(u).sort()}
 function sheetFijo(f){
@@ -659,11 +666,13 @@ function act(a,id){
     if(old){if(old.viajeId)o.viajeId=old.viajeId;if(old.viajePago)o.viajePago=old.viajePago}
     var lm=linkMeta(o,1);
     if(id){S.movs[S.movs.indexOf(byId(S.movs,id))]=o}else S.movs.push(o);
-    ui.y=+f.slice(0,4);ui.m=+f.slice(5,7)-1;ui.sheet=null;save();var dd=o.deuda&&byId(S.deudas,o.deuda);toast(lm?'Sumado a «'+lm.n+'»':dd?'Cobro anotado en la deuda de '+dd.deudor:'Movimiento guardado');return}
+    ui.y=+f.slice(0,4);ui.m=+f.slice(5,7)-1;ui.sheet=null;save();var dd=o.deuda&&byId(S.deudas,o.deuda);toast(lm?'Sumado a «'+lm.n+'»':dd?'Cobro anotado en la deuda de '+dd.deudor:(!id&&o.naturaleza==='Fijo'&&o.fijo)?'Ajustado solo en '+MESES[+f.slice(5,7)-1].toLowerCase()+'; el gasto fijo no cambia':'Movimiento guardado');return}
   case 'del-mov':if(armed!==id){armed=id;var b=document.querySelector('[data-act=del-mov]');if(b)b.textContent='¿Seguro? Pulsa otra vez';return}
     linkMeta(byId(S.movs,id),-1);S.movs=S.movs.filter(function(x){return x.id!==id});armed=null;ui.sheet=null;save();toast('Movimiento eliminado');return;
   case 'new-fijo':ui.sheet=sheetFijo();break;
   case 'edit-fijo':ui.sheet=sheetFijo(byId(S.fijos,id));break;
+  case 'ajustar-fijo':{var fa=byId(S.fijos,id);if(!fa)break;var dimA=new Date(ui.y,ui.m+1,0).getDate();
+    ui.sheet=sheetMov({_new:1,_ajuste:1,concepto:fa.concepto,tipo:fa.tipo,categoria:fa.categoria,importe:fa.importe,fecha:key()+'-'+p2(Math.min(Math.max(+fa.dia||1,1),dimA)),cuenta:fa.cuenta,naturaleza:'Fijo',fijo:fa.concepto});break}
   case 'save-fijo':{var c=g('f_concepto').trim();if(!c){toast('Escribe un concepto');return}
     var o={id:id||uid(),concepto:c,tipo:g('f_tipo'),categoria:g('f_categoria'),importe:num(g('f_importe')),dia:Math.min(31,Math.max(1,parseInt(g('f_dia'))||1)),cuenta:g('f_cuenta'),banco:g('f_banco').trim(),desde:g('f_desde'),hasta:g('f_hasta'),activo:g('f_activo')};
     if(id){S.fijos[S.fijos.indexOf(byId(S.fijos,id))]=o}else S.fijos.push(o);ui.sheet=null;save();toast('Gasto fijo guardado');return}
