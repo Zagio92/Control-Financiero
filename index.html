@@ -500,6 +500,7 @@ function vConf(){
   return '<p class="sub">Aquí editas las listas de los desplegables. Escribe una opción por línea.</p><div class="card">'+ta('catGasto','Categorías de gasto')+ta('catIngreso','Categorías de ingreso y ahorro')+ta('cuentas','Cuentas / métodos')+ta('naturalezas','Naturaleza')+'<button class="btn" data-act="save-cfg">Guardar listas</button></div>'+
   '<div class="card"><h3>Copia de seguridad</h3><p class="sub" style="margin:0" id="stState"></p><p class="sub" style="margin:0">Los datos se guardan solo en este navegador. Copia el texto y guárdalo (notas, correo) para recuperarlo o pasarlo a otro dispositivo.</p>'+
   '<div class="acts"><button class="btn sec" data-act="export">Mostrar copia</button><button class="btn sec" data-act="import">Restaurar copia</button></div><label class="f">Cargar desde archivo .json<input type="file" id="fileimp" accept="application/json,.json" style="background:var(--surface)"></label></div>'+
+  (window.Android?'<div class="card"><h3>App Android</h3><div class="kv"><span>Versión instalada</span><b>'+esc(appVersion())+'</b></div><p class="sub" style="margin:0">La app busca versiones nuevas en GitHub al abrirse (como mucho cada 6 horas). Tus datos no se tocan al actualizar.</p><button class="btn sec" data-act="check-upd">Buscar actualizaciones</button></div>':'')+
   '<div class="card"><h3>Datos</h3><div class="acts"><button class="btn sec" data-act="demo">Cargar datos de ejemplo</button><button class="btn del" data-act="wipe">Borrar todo</button></div></div>';}
 
 function vGuia(){
@@ -533,6 +534,7 @@ function sheetMov(m){
    fld('','Importe reembolsado (€)','<input id="f_reembolsado" type="number" inputmode="decimal" step="0.01" min="0" value="'+esc(m.reembolsado||'')+'">')+'</div>'+
    fld('','Observaciones','<input id="f_obs" value="'+esc(m.obs)+'">',1)+'</div>'+
    '<div class="acts"><button class="btn" data-act="save-mov"'+(nuevo?'':' data-id="'+m.id+'"')+'>Guardar</button>'+(nuevo?'':'<button class="btn del" data-act="del-mov" data-id="'+m.id+'">Eliminar</button>')+'<button class="btn sec" data-act="close">Cancelar</button></div>';}
+function appVersion(){try{return window.Android.version()}catch(e){return '?'}}
 function bancos(){var u={};S.fijos.forEach(function(f){if(f.banco)u[f.banco]=1});return Object.keys(u).sort()}
 function sheetFijo(f){
   var nuevo=!f;f=f||{concepto:'',tipo:'Gasto',categoria:'',importe:'',dia:1,cuenta:S.cfg.cuentas[0]||'',desde:'',hasta:'',activo:'Sí'};
@@ -666,6 +668,7 @@ function act(a,id){
   case 'new-meta':S.metas.push({id:uid(),n:'Nuevo objetivo',meta:0,act:0,fecha:''});save();break;
   case 'del-meta':S.metas=S.metas.filter(function(x){return x.id!==id});save();break;
   case 'save-cfg':document.querySelectorAll('[data-cfg]').forEach(function(t){S.cfg[t.dataset.cfg]=t.value.split('\n').map(function(s){return s.trim()}).filter(Boolean)});save();toast('Listas guardadas');return;
+  case 'check-upd':try{window.Android.checkUpdates();toast('Buscando actualizaciones…')}catch(e){}return;
   case 'calc-fill':S.calc=nominaMes();save();break;
   case 'export':ui.sheet=sheetText('Copia de seguridad',JSON.stringify(S),false);break;
   case 'import':ui.sheet=sheetText('Restaurar copia','',true);break;
