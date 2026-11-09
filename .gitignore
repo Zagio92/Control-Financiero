@@ -1,0 +1,7 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Copias comprimidas: no se suben, el código ya está en el repositorio
+*.zip
